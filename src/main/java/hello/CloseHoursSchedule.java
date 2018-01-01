@@ -1,0 +1,15 @@
+package hello;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+public interface CloseHoursSchedule extends JpaRepository<CloseHoursSchedulerEntity,Long> {
+
+	@Query(value="Select * From close_hours_scheduler_entity where schedular_type='oneTime' and status=false ORDER BY invoke_time ASC LIMIT 1",nativeQuery = true)
+	public CloseHoursSchedulerEntity getOneTimeScheduler();
+	@Query(value="Select * From close_hours_scheduler_entity where schedular_type='weekly'",nativeQuery = true)	
+	public List<CloseHoursSchedulerEntity> getWeeklySchedulers();
+
+}
