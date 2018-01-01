@@ -139,18 +139,35 @@ System.out.println(scheduleService);
 	
 	public void setNextTask()
 	{
+		
+		
 		System.out.println("next task");
+		timer.purge();
 	// do 18 hours logic
+	CloseHoursSchedularHistory pendingTask = closeHoursHistory.getPendingTask();
+		if(pendingTask!=null)
+		{ 
+			Long seconds=(pendingTask.getWakeUpTime().getTime()-pendingTask.getInvokeTime().getTime())/1000;
 	
-	
+			CloseHoursSchedularEntity entity=scheduleService.getOne(pendingTask.getId());
+			Long secondsLeft=entity.getSleepTime()-seconds;
+			entity.setSleepTime(secondsLeft);
+			entity.setInvokeTime(pendingTask.getWakeUpTime());
+			
+			timer.schedule(new ExecuteTask(scheduleService,entity,closeHoursHistory,mqttService),entity.getInvokeTime());
+			
+			
+		}
 		
 		
 		//
+		else {
 		CloseHoursSchedularEntity entity=mqttService.getExecutionTask();
 		//System.out.println(entity.toString());
 		if(entity!=null)
 		timer.schedule(new ExecuteTask(scheduleService,entity,closeHoursHistory,mqttService),entity.getInvokeTime());
 		
+		}
 	}
 	
 

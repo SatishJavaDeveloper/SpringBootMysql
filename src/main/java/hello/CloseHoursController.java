@@ -43,9 +43,25 @@ public class CloseHoursController {
 		//ExecuteTask.timer.purge();
 		if(ExecuteTask.hasStarted==false)
 		{
+			
 		ExecuteTask.timer.cancel();
 		ExecuteTask.timer=new Timer();
+		CloseHoursSchedularHistory pendingTask = closeHoursHistory.getPendingTask();
+		if(pendingTask!=null)
+		{ 
+			Long seconds=(pendingTask.getWakeUpTime().getTime()-pendingTask.getInvokeTime().getTime())/1000;
+
+			CloseHoursSchedularEntity entity=scheduleService.getOne(pendingTask.getId());
+			Long secondsLeft=entity.getSleepTime()-seconds;
+			entity.setSleepTime(secondsLeft);
+			entity.setInvokeTime(pendingTask.getWakeUpTime());
+			
+			ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,entity,closeHoursHistory,mqttService),entity.getInvokeTime());
+					
+		}
+		else{
 		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req,closeHoursHistory,mqttService),req.getInvokeTime());
+		}
 		}
 		List<CloseHoursSchedularEntity> lists=scheduleService.findAll();
 		System.out.println(lists.size());
@@ -83,9 +99,25 @@ public class CloseHoursController {
 	public void initial()
 	{System.out.println("initial task"+scheduleService);
 	//ExecuteTask task=new ExecuteTask(scheduleService,closeHoursHistory);
+	CloseHoursSchedularHistory pendingTask = closeHoursHistory.getPendingTask();
+	if(pendingTask!=null)
+	{ 
+		Long seconds=(pendingTask.getWakeUpTime().getTime()-pendingTask.getInvokeTime().getTime())/1000;
+
+		CloseHoursSchedularEntity entity=scheduleService.getOne(pendingTask.getId());
+		Long secondsLeft=entity.getSleepTime()-seconds;
+		entity.setSleepTime(secondsLeft);
+		entity.setInvokeTime(pendingTask.getWakeUpTime());
+		
+		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,entity,closeHoursHistory,mqttService),entity.getInvokeTime());
+		
+		
+	}
+	else {
 		CloseHoursSchedularEntity req=mqttService.getExecutionTask();
 		System.out.println("req:"+req);
 		if(req!=null)
 		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req,closeHoursHistory,mqttService),req.getInvokeTime());
+	}
 	}
 }
