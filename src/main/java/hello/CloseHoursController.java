@@ -1,6 +1,7 @@
 package hello;
 
 import java.util.List;
+import java.util.Timer;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -21,8 +22,12 @@ public class CloseHoursController {
 	@Autowired
 	CloseHoursSchedule scheduleService;
 	
+	@Autowired
+	CloseHoursHistory closeHoursHistory;
+	@Autowired
+	MqttService mqttService;
 	@RequestMapping(value="create",method=RequestMethod.POST)
-	public String createSchedule(@RequestBody CloseHoursSchedulerEntity requestBody)
+	public String createSchedule(@RequestBody CloseHoursSchedularEntity requestBody)
 	{/*CloseHoursSchedulerEntity entity = new CloseHoursSchedulerEntity();
 	entity.setSchedularType("oneTime");
 	entity.setInvokeTime(new DateTime());
@@ -32,9 +37,17 @@ public class CloseHoursController {
 		*/
 		requestBody.setStatus(false);
 		scheduleService.saveAndFlush(requestBody);
-		CloseHoursSchedulerEntity req=new ExecuteTask().getExecutionTask();
-		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req),req.getInvokeTime());
-		List<CloseHoursSchedulerEntity> lists=scheduleService.findAll();
+		System.out.println("no records:"+scheduleService.findAll().size());
+		CloseHoursSchedularEntity req=mqttService.getExecutionTask();
+		System.out.println("reqt:"+req);
+		//ExecuteTask.timer.purge();
+		if(ExecuteTask.hasStarted==false)
+		{
+		ExecuteTask.timer.cancel();
+		ExecuteTask.timer=new Timer();
+		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req,closeHoursHistory,mqttService),req.getInvokeTime());
+		}
+		List<CloseHoursSchedularEntity> lists=scheduleService.findAll();
 		System.out.println(lists.size());
 		return "success";
 		
@@ -51,7 +64,7 @@ public class CloseHoursController {
 		scheduleService.saveAndFlush(entity);*/
 	//	ExecuteTask task=new ExecuteTask(scheduleService);
 	//	task.getExecutionTask();
-		CloseHoursSchedulerEntity lists=scheduleService.getOneTimeScheduler();
+		CloseHoursSchedularEntity lists=scheduleService.getOneTimeScheduler();
 		System.out.println("size:"+lists.getInvokeTime());
 //		System.out.println(lists.get(0).getInvokeTime());
 		
@@ -69,9 +82,10 @@ public class CloseHoursController {
 	@PostConstruct
 	public void initial()
 	{System.out.println("initial task"+scheduleService);
-	ExecuteTask task=new ExecuteTask(scheduleService);
-		CloseHoursSchedulerEntity req=task.getExecutionTask();
-		System.out.println("time:"+req.getInvokeTime());
-		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req),req.getInvokeTime());
+	//ExecuteTask task=new ExecuteTask(scheduleService,closeHoursHistory);
+		CloseHoursSchedularEntity req=mqttService.getExecutionTask();
+		System.out.println("req:"+req);
+		if(req!=null)
+		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req,closeHoursHistory,mqttService),req.getInvokeTime());
 	}
 }

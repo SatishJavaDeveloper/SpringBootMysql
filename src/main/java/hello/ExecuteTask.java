@@ -1,55 +1,69 @@
 package hello;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class ExecuteTask extends TimerTask{
 	static Timer timer = new Timer();
 	CloseHoursSchedule scheduleService;
-	CloseHoursSchedulerEntity closeHours;
-	public ExecuteTask(CloseHoursSchedule scheduleService)
-	{ System.out.println("schedule service");
-		this.scheduleService=scheduleService;
-		
-	}
-	public ExecuteTask()
-	{
-		
-	}
-	public ExecuteTask(CloseHoursSchedule scheduleService,CloseHoursSchedulerEntity closeHours)
+	CloseHoursSchedularEntity closeHours;
+	CloseHoursHistory closeHoursHistory;
+	MqttService mqttService;
+	public static boolean hasStarted = false;
+	public ExecuteTask(CloseHoursSchedule scheduleService,CloseHoursSchedularEntity closeHours,CloseHoursHistory closeHoursHistory,MqttService mqttService)
 	{
 		this.scheduleService=scheduleService;
 		this.closeHours=closeHours;
+		this.closeHoursHistory=closeHoursHistory;
+		this.mqttService=mqttService;
+		
 	}
 	@Override
 	public void run() {
+		hasStarted=true;
 		// TODO Auto-generated method stub
+		List<CloseHoursSchedularHistory> closeHoursEntity=closeHoursHistory.isTagAvailable(closeHours.getInvokeTime());
+		if(closeHoursEntity==null)
+		{	
+		System.out.println("id:"+closeHours.getId());
 		System.out.println("current task:"+closeHours.getInvokeTime());
 		if(closeHours.getSchedularType().equalsIgnoreCase("oneTime"))
 		{
 			closeHours.setStatus(true);
 			scheduleService.save(closeHours);
+			
 		}
+		CloseHoursSchedularHistory history=new CloseHoursSchedularHistory();
+		history.setId(closeHours.getId());
+		history.setPublishedTime(new Date());
+		history.setInvokeTime(closeHours.getInvokeTime());
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(closeHours.getInvokeTime());
+		calendar.add(Calendar.SECOND,closeHours.getSleepTime().intValue());
+		history.setWakeUpTime(calendar.getTime());
+		if(closeHours.getSleepTime()>64800)
+		{
+			history.setStatus("inprogress");
+		}
+		else
+		{
+			history.setStatus("completed");
+		}
+		System.out.println("close hours history:"+closeHoursHistory);
+		closeHoursHistory.save(history);
 		//CloseHoursSchedulerEntity entry=getExecutionTask();
 		//timer.cancel();
 		setNextTask();
+		}
+		else
+		{
+			System.out.println("tag not available");
+		}
+		hasStarted=false;
 		
 	}
 	// extends TimerTask
@@ -72,13 +86,13 @@ public class ExecuteTask extends TimerTask{
 	 * 
 	 * }
 	 */
-	public CloseHoursSchedulerEntity getExecutionTask() {
+	/*public CloseHoursSchedularEntity getExecutionTask() {
 		Map<Long, Date> records = new HashMap<>();
 System.out.println(scheduleService);
-		CloseHoursSchedulerEntity oneTime = scheduleService.getOneTimeScheduler();
-		List<CloseHoursSchedulerEntity> weekly = scheduleService.getWeeklySchedulers();
+		CloseHoursSchedularEntity oneTime = scheduleService.getOneTimeScheduler();
+		List<CloseHoursSchedularEntity> weekly = scheduleService.getWeeklySchedulers();
 		System.out.println(weekly.size());
-		for (CloseHoursSchedulerEntity entity : weekly) {
+		for (CloseHoursSchedularEntity entity : weekly) {
 			Calendar c = Calendar.getInstance();
 			Date temp=new Date();
 			temp.setHours(entity.getInvokeTime().getHours());
@@ -99,37 +113,44 @@ System.out.println(scheduleService);
 			    .sorted(Entry.comparingByValue())
 			    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
 			                              (e1, e2) -> e1, LinkedHashMap::new));
-
-		Date weeklyDateObj=(Date) sortedMap.values().toArray()[0];
-		if(oneTime.getInvokeTime().after(weeklyDateObj))
+		Date weeklyDateObj = null;
+		System.out.println("size:"+sortedMap.size());
+		if(sortedMap.size()>0)
 		{
-			CloseHoursSchedulerEntity response=scheduleService.findOne((Long)sortedMap.keySet().toArray()[0]);
+		weeklyDateObj=(Date) sortedMap.values().toArray()[0];
+		}
+		
+		if(oneTime!=null && oneTime.getInvokeTime()!=null)
+		{
+			if(weeklyDateObj!=null && oneTime.getInvokeTime().after(weeklyDateObj))
+		{
+			CloseHoursSchedularEntity response=scheduleService.findOne((Long)sortedMap.keySet().toArray()[0]);
 			response.setInvokeTime(weeklyDateObj);
 			return response;
 		}
 		
-		/*Iterator it = records.entrySet().iterator();
-		System.out.println("before sort:");
-	    while (it.hasNext()) {
-	        Map.Entry pair = (Map.Entry)it.next();
-	        System.out.println(pair.getKey() + " = " + pair.getValue());
-	        it.remove(); // avoids a ConcurrentModificationException
-	    }
-	    
-	    System.out.println("after sort:");
-	    Iterator itr = sortedMap.entrySet().iterator();
-	    while (itr.hasNext()) {
-	        Map.Entry pair = (Map.Entry)itr.next();
-	        System.out.println(pair.getKey() + " = " + pair.getValue());
-	        itr.remove(); // avoids a ConcurrentModificationException
-	    }*/
-	    
+	
+		
+	     
 		return oneTime;
     }
+		return null;
+	}*/
 	
 	public void setNextTask()
 	{
-		timer.schedule(new ExecuteTask(),getExecutionTask().getInvokeTime());
+		System.out.println("next task");
+	// do 18 hours logic
+	
+	
+		
+		
+		//
+		CloseHoursSchedularEntity entity=mqttService.getExecutionTask();
+		//System.out.println(entity.toString());
+		if(entity!=null)
+		timer.schedule(new ExecuteTask(scheduleService,entity,closeHoursHistory,mqttService),entity.getInvokeTime());
+		
 	}
 	
 
