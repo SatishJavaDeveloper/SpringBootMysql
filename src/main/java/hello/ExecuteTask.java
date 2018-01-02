@@ -1,4 +1,4 @@
-package hello;
+/*package hello;
 
 import java.util.Calendar;
 
@@ -67,7 +67,7 @@ public class ExecuteTask extends TimerTask{
 		
 	}
 	// extends TimerTask
-	/*
+	
 	 * public CloseHoursSchedulerEntity entity; public CloseHoursSchedule
 	 * object;
 	 * 
@@ -75,9 +75,9 @@ public class ExecuteTask extends TimerTask{
 	 * object) { this.entity=entity; this.object=object;
 	 * 
 	 * } static Timer timer = new Timer();
-	 */
+	 
 
-	/*
+	
 	 * @Override public void run() {
 	 * 
 	 * System.out.println("executing:"+entity.getInvokeTime());
@@ -85,8 +85,8 @@ public class ExecuteTask extends TimerTask{
 	 * // TODO Auto-generated method stub
 	 * 
 	 * }
-	 */
-	/*public CloseHoursSchedularEntity getExecutionTask() {
+	 
+	public CloseHoursSchedularEntity getExecutionTask() {
 		Map<Long, Date> records = new HashMap<>();
 System.out.println(scheduleService);
 		CloseHoursSchedularEntity oneTime = scheduleService.getOneTimeScheduler();
@@ -135,7 +135,7 @@ System.out.println(scheduleService);
 		return oneTime;
     }
 		return null;
-	}*/
+	}
 	
 	public void setNextTask()
 	{
@@ -162,7 +162,7 @@ System.out.println(scheduleService);
 		
 		//
 		else {
-		CloseHoursSchedularEntity entity=mqttService.getExecutionTask();
+		CloseHoursSchedularEntity entity=mqttService.getExecutionTask(new Date());
 		//System.out.println(entity.toString());
 		if(entity!=null)
 		timer.schedule(new ExecuteTask(scheduleService,entity,closeHoursHistory,mqttService),entity.getInvokeTime());
@@ -172,3 +172,4 @@ System.out.println(scheduleService);
 	
 
 }
+*/

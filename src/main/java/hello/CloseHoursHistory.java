@@ -9,13 +9,13 @@ import org.springframework.data.repository.query.Param;
 
 public interface CloseHoursHistory extends JpaRepository<CloseHoursSchedularHistory, Long> {
 
-	@Query(value="Select * From close_hours_schedular_history where id= :id and invoke_time=:date",nativeQuery = true)	
+	@Query(value="Select * From close_hours_schedular_history where id= :id and published_time=:date",nativeQuery = true)	
 	public CloseHoursSchedularHistory getWeeklySchedulers(@Param("id") Long id,@Param("date") Date invoke);	
 	
 	@Query(value="Select * From close_hours_schedular_history where published_time<= :invokeTime and wake_up_time>=:invokeTime",nativeQuery = true)	
 	public List<CloseHoursSchedularHistory> isTagAvailable(@Param("invokeTime") Date invoke);
 	
-	@Query(value="Select * From close_hours_schedular_history where status='inprogress'")
+	@Query(value="Select * From close_hours_schedular_history where status='inprogress'", nativeQuery=true)
 	public CloseHoursSchedularHistory getPendingTask();
 	
 }

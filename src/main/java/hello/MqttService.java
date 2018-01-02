@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.junit.FixMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,8 +22,73 @@ public class MqttService {
 
 	@Autowired
 	CloseHoursHistory closeHoursHistory;
-
-	public CloseHoursSchedularEntity getExecutionTask() {
+@Scheduled(fixedDelay=10000, initialDelay=100)	
+public void schedularTask()
+{
+	
+	CloseHoursSchedularEntity entity=getExecutionTask(new Date());
+	if(entity==null)
+	{
+		if(scheduleService.getWeeklySchedulers().size()>0)
+		{
+			Calendar cal= Calendar.getInstance();
+			cal.setTime(new Date());
+			cal.add(Calendar.DATE, 7);
+			entity=getExecutionTask(cal.getTime());
+			
+		}
+	}
+	if(entity!=null) {
+		if(new Date().after(entity.getInvokeTime()))
+		{
+//publish	
+			System.out.println("publishing:"+entity.getSleepTime());
+			if(entity.getSchedularType().equalsIgnoreCase("oneTime"))
+			{
+				entity.setStatus(true);
+				scheduleService.save(entity);
+				
+			}
+			CloseHoursSchedularHistory history=new CloseHoursSchedularHistory();
+			history.setId(entity.getId());
+			history.setPublishedTime(new Date());
+			history.setInvokeTime(entity.getInvokeTime());
+			Calendar calendar=Calendar.getInstance();
+			calendar.setTime(entity.getInvokeTime());
+			calendar.add(Calendar.SECOND,entity.getSleepTime().intValue());
+			history.setWakeUpTime(calendar.getTime());
+			if(entity.getSleepTime()>64800)
+			{
+				history.setStatus("inprogress");
+			}
+			else
+			{
+				history.setStatus("completed");
+			}
+			System.out.println("close hours history:"+closeHoursHistory);
+			closeHoursHistory.save(history);
+			
+		}
+		
+	}
+	
+//System.out.println("records count:"+closeHoursHistory.count());	
+}
+	
+	public CloseHoursSchedularEntity getExecutionTask(Date currentDate) {
+		CloseHoursSchedularHistory pendingTask = closeHoursHistory.getPendingTask();
+		if(pendingTask!=null)
+		{ 
+			Long seconds=(pendingTask.getWakeUpTime().getTime()-pendingTask.getInvokeTime().getTime())/1000;
+	
+			CloseHoursSchedularEntity entity=scheduleService.getOne(pendingTask.getId());
+			Long secondsLeft=entity.getSleepTime()-seconds;
+			entity.setSleepTime(secondsLeft);
+			entity.setInvokeTime(pendingTask.getWakeUpTime());
+			return entity;
+			
+			
+		}
 		Map<Long, Date> records = new HashMap<>();
 		System.out.println(scheduleService);
 		CloseHoursSchedularEntity oneTime = scheduleService.getOneTimeScheduler();
@@ -29,7 +96,7 @@ public class MqttService {
 		System.out.println(weekly.size());
 		for (CloseHoursSchedularEntity entity : weekly) {
 			Calendar c = Calendar.getInstance();
-			Date temp = new Date();
+			Date temp =  currentDate; //new Date();
 			temp.setHours(entity.getInvokeTime().getHours());
 			temp.setMinutes(entity.getInvokeTime().getMinutes());
 			temp.setSeconds(entity.getInvokeTime().getSeconds());

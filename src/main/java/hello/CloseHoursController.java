@@ -1,13 +1,8 @@
 package hello;
 
-import java.util.List;
-import java.util.Timer;
-
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,16 +23,10 @@ public class CloseHoursController {
 	MqttService mqttService;
 	@RequestMapping(value="create",method=RequestMethod.POST)
 	public String createSchedule(@RequestBody CloseHoursSchedularEntity requestBody)
-	{/*CloseHoursSchedulerEntity entity = new CloseHoursSchedulerEntity();
-	entity.setSchedularType("oneTime");
-	entity.setInvokeTime(new DateTime());
-	entity.setDayOfWeek(4);
-	entity.setSleepTime((long)31001);
-	
-		*/
+	{
 		requestBody.setStatus(false);
 		scheduleService.saveAndFlush(requestBody);
-		System.out.println("no records:"+scheduleService.findAll().size());
+	/*	System.out.println("no records:"+scheduleService.findAll().size());
 		CloseHoursSchedularEntity req=mqttService.getExecutionTask();
 		System.out.println("reqt:"+req);
 		//ExecuteTask.timer.purge();
@@ -64,7 +53,7 @@ public class CloseHoursController {
 		}
 		}
 		List<CloseHoursSchedularEntity> lists=scheduleService.findAll();
-		System.out.println(lists.size());
+		System.out.println(lists.size());*/
 		return "success";
 		
 	}
@@ -95,7 +84,7 @@ public class CloseHoursController {
 		CloseHoursSchedulerEntity req=new ExecuteTask().getExecutionTask();
 		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req),req.getInvokeTime());
 	}*/
-	@PostConstruct
+	/*@PostConstruct
 	public void initial()
 	{System.out.println("initial task"+scheduleService);
 	//ExecuteTask task=new ExecuteTask(scheduleService,closeHoursHistory);
@@ -119,5 +108,5 @@ public class CloseHoursController {
 		if(req!=null)
 		ExecuteTask.timer.schedule(new ExecuteTask(scheduleService,req,closeHoursHistory,mqttService),req.getInvokeTime());
 	}
-	}
+	}*/
 }

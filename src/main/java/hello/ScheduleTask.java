@@ -20,8 +20,8 @@ public class ScheduleTask {
       System.out.println("Current Time: " + df.format( new Date()));
  
       //Date and time at which you want to execute
-      Date date = df.parse("2017-12-31 12:24:00");
-      Date dateObj = df.parse("2017-12-31 12:25:00");
+      Date date = df.parse("2018-01-02 22:19:50");
+      Date dateObj = df.parse("2017-01-02 22:21:00");
       timer.schedule(new MyTimeTask(), date);
       timer.schedule(new MyTimeTask(), dateObj);
  System.out.println("test");
