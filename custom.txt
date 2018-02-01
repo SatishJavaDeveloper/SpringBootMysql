@@ -1,0 +1,5 @@
+<langpack>
+    <str id="TargetPanel.info" txt="Select the folder where $APP_NAME $APP_VER sample projects should be installed."/>
+	<str id="conditionvalidator.isModulesExist.warning.message" txt="Keil IDE already installed. Kindly uninstall and try again."/>
+
+</langpack>
