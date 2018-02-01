@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<installation version="5.0">
+ 
+<info>
+    <appname>QueSSence</appname>
+    <appversion>1.0.0</appversion>
+	<authors>
+    <author name="Redpine Signals Inc." email=""/>
+    </authors>
+    <url>https://www.redpinesignals.com</url>
+    <javaversion>1.7</javaversion>
+	<requiresjdk>yes</requiresjdk>
+	<uninstaller name="uninstall.jar" path="${INSTALL_PATH}/uninstaller" write="yes"/>
+   </info>
+  <locale>
+    <langpack iso3="eng"/>
+	<!--<langpack iso3="fra"/>
+	<langpack iso3="chn"/>-->
+  </locale>
+  <guiprefs width="800" height="600" resizable="no">
+	  <modifier key="labelGap" value="2"/>
+	  <modifier key="labelFontSize " value="1.5"/>
+	  <modifier key="layoutAnchor" value="CENTER"/>
+	  <modifier key="useHeadingPanel" value="yes"/>
+	  <modifier key="headingImageOnLeft" value="yes"/>
+	  <modifier key="headingLineCount" value="1"/>
+	  <modifier key="headingFontSize" value="1.5"/>
+	  <modifier key="headingBackgroundColor" value="0x00ffffff"/>
+	  <modifier key="headingPanelCounter" value="text"/>
+	  <modifier key="headingPanelCounterPos" value="inHeading"/>
+	  <modifier key="headingImageBorderSize" value="1"/>
+  </guiprefs>
+ 
+  <resources>
+    <res id="LicencePanel.licence" src="license.txt"/>
+	<res id="Installer.image" src="login-quessence-logo.10c07dffd0afc5e614bd.png" />
+	<res id="Keil.image" src="Keil_logo.svg.png" />
+	<res id="Drivers.image" src="download.jpg" />
+	 <res id="CustomLangPack.xml_eng" src="CustomLangPack.xml_eng"/> 
+  </resources>
+  <dynamicvariables>
+    <variable name="RegistryReadTest" checkonce="true"
+              regkey="HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Keil\Products\MDK"
+              regvalue="Path"/>
+</dynamicvariables>
+ <listeners>
+    <listener classname="RegistryInstallerListener" stage="install" >
+        <os family="windows"/>
+    </listener>
+    <listener classname="RegistryUninstallerListener" stage="uninstall" >
+        <os family="windows"/>
+    </listener>
+	
+	
+</listeners>
+<conditions>
+<condition type="exists" id="installedSomePlugin">
+    <file>${RegistryReadTest}/BIN/ARM.dll</file>
+</condition>
+
+
+</conditions>
+  <panels>
+    <panel classname="CheckedHelloPanel" />
+	<panel classname="InfoPanel" id="panel.info">
+      <configuration>
+        <param name="console-text-paging" value="true" />
+        <param name="console-text-wordwrap" value="false" />
+      </configuration>
+    </panel>
+	 <panel classname="LicencePanel" id="panel.license">
+      <configuration>
+        <param name="console-text-paging" value="true" />
+        <param name="console-text-wordwrap" value="false" />
+      </configuration>
+    </panel>
+    <panel classname="TargetPanel" />
+	<panel classname="ImgPacksPanel"/>
+    <panel classname="InstallPanel" />
+	 
+	 
+    <panel classname="SimpleFinishPanel" />
+  </panels>
+  <packs>
+    <pack name="Keil Installation" preselected="yes" required="yes" packImgId = "Keil.image" condition="@!installedSomePlugin">
+      <description>Keil development tools for the 8051 Microcontroller Architecture support every level of software developer from the professional applications engineer to the student just learning about embedded software development.</description>
+ 
+      <file src="MDK524a.EXE" targetdir="${INSTALL_PATH}" override="true">
+	   
+	   
+	  
+	  </file>
+    <executable targetfile="$INSTALL_PATH/MDK524a.EXE" type="bin" stage="postinstall" failure ="warn" keep="false">
+        <os family="windows" />
+        <args>
+            <arg value="-version"/>
+        </args>
+    </executable>
+	  
+    </pack>
+
+	  <pack name="Drivers Installation" preselected="yes" required="yes" packImgId = "Drivers.image">
+      <description>A driver communicates with the device through the computer bus or communications subsystem to which the hardware connects. When a calling program invokes a routine in the driver, the driver issues commands to the device. </description>
+ 
+      <file src="SQLEXPR_x64_ENU.exe" targetdir="${INSTALL_PATH}" override="true">
+	  
+	  </file>
+    <executable targetfile="$INSTALL_PATH/SQLEXPR_x64_ENU.exe" type="bin" stage="postinstall" failure ="warn" keep="false">
+        <os family="windows" />
+        <args>
+            <arg value="-version"/>
+        </args>
+    </executable>
+	   
+    </pack>
+<pack name="Sample Projects" preselected="yes" required="no">
+ <description>QueSSence Sample Projects</description>
+ <file src="mongo.jar.zip" targetdir="${INSTALL_PATH}" unpack="true" override="true">
+       
+    </file>
+</pack>
+	</packs>
+ <natives>
+    <native type="3rdparty" name="COIOSHelper.dll" stage="both">
+       <os family="windows"/>
+    </native>
+    <native type="3rdparty" name="COIOSHelper_x64.dll" stage="both">
+       <os family="windows"/>
+    </native>
+</natives>
+</installation>
